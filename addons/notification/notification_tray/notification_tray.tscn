@@ -1,0 +1,20 @@
+[gd_scene load_steps=2 format=3 uid="uid://bhhwk2ugwjxtu"]
+
+[ext_resource type="Script" path="res://addons/notification/notification_tray/notification_tray.gd" id="1_se0tq"]
+
+[node name="NotificationTray" type="VBoxContainer"]
+process_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_type_variation = &"NotificationTray"
+script = ExtResource("1_se0tq")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(500, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(0.98393, 0.670618, 0.490647, 1)

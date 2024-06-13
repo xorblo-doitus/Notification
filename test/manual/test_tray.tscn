@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3 uid="uid://d4gpka6cf7mxi"]
+
+[ext_resource type="PackedScene" uid="uid://bhhwk2ugwjxtu" path="res://addons/notification/notification_tray/notification_tray.tscn" id="1_tbp8t"]
+[ext_resource type="Script" path="res://test/manual/test_tray.gd" id="1_wx4g1"]
+
+[node name="TestTray" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_wx4g1")
+
+[node name="NotificationTray" parent="." instance=ExtResource("1_tbp8t")]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+offset_left = -500.0
+offset_top = -60.0
+grow_horizontal = 0
+grow_vertical = 0
+notification_duration_multiplier = 0.2
+appear_animation_type = 4
+disappear_animation_type = 2
+disappear_animation_time = 1.0
+disappear_animation_ease = 0
