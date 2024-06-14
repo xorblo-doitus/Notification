@@ -180,9 +180,9 @@ func _appear_animator(notif: Control) -> void:
 			if _shall_apply_incomming_behind():
 				notif.z_index = -1
 			
+			notif.show()
 			var container: Control = _build_container_for(notif)
 			notif.position = _get_offset_to_offscreen(appear_animation_type, notif)
-			notif.show()
 			
 			await _apply_appear_tween_properties(notif.create_tween().tween_property(
 				notif,
