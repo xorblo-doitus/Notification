@@ -25,3 +25,7 @@ func _get_random_scene() -> PackedScene:
 		return preload("res://test/manual/random_notifications/container.tscn")
 	
 	return preload("res://test/manual/random_notifications/colored.tscn")
+
+
+func _on_add_pressed() -> void:
+	push_random()

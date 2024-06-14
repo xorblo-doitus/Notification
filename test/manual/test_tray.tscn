@@ -21,8 +21,19 @@ offset_left = -500.0
 offset_top = -60.0
 grow_horizontal = 0
 grow_vertical = 0
-notification_duration_multiplier = 0.2
-appear_animation_type = 4
-disappear_animation_type = 2
-disappear_animation_time = 1.0
-disappear_animation_ease = 0
+notification_duration_multiplier = 0.5
+appear_animation_type = 0
+appear_animation_time = 1.0
+disappear_animation_type = 4
+
+[node name="Add" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -8.0
+offset_right = 8.0
+grow_vertical = 0
+text = "~add notification~"
+
+[connection signal="pressed" from="Add" to="." method="_on_add_pressed"]
