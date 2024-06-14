@@ -32,8 +32,12 @@ enum Gravity {
 	UPSIDE_DOWN,
 }
 
-# TODO implement
-#@export var maximum_shown_notifications: int = 1
+## The maximum amount of notification that can be visible at a time.
+@export var maximum_shown_notifications: int = 50:
+	set(new):
+		maximum_shown_notifications = new
+		while _queued_handlers and _shown_handlers.size() < maximum_shown_notifications:
+			_process_handler.call_deferred(_queued_handlers.pop_front())
 @export var notification_duration: float = 3.0
 @export var notification_duration_multiplier: float = 1.0
 @export var notification_squish_time: float = 0.5
@@ -93,6 +97,7 @@ var custom_appear_animation: Callable
 var custom_disappear_animation: Callable
 
 
+var _queued_handlers: Array[NotificationHandler] = []
 var _shown_handlers: Array[NotificationHandler] = []
 var _group_cache: Array = []
 func push(notif: Control) -> NotificationHandler:
@@ -104,13 +109,9 @@ func push(notif: Control) -> NotificationHandler:
 	handler.duration_multiplier = notification_duration_multiplier
 	
 	notif.size_flags_horizontal = notifications_size_flags_horizontal
-	notif.hide()
-	
-	add_child(notif)
-	if gravity == Gravity.NORMAL:
-		move_child(notif, 0)
 	
 	_process_handler.call_deferred(handler)
+	
 	return handler
 
 
@@ -118,7 +119,18 @@ func _process_handler(handler: NotificationHandler) -> void:
 	if handler.group != null and handler.group in _group_cache:
 		return
 	
+	if _shown_handlers.size() >= maximum_shown_notifications:
+		_queued_handlers.append(handler)
+		return
+	
 	_push_handler(handler)
+	
+	
+	handler._notif.hide()
+	add_child(handler._notif)
+	if gravity == Gravity.NORMAL:
+		move_child(handler._notif, 0)
+	
 	await handler.appear()
 	
 	await get_tree().create_timer(
@@ -131,10 +143,19 @@ func _process_handler(handler: NotificationHandler) -> void:
 	
 	handler._notif.free()
 	_shown_handlers.erase(handler)
+	
+	if _queued_handlers:
+		_process_handler.call_deferred(_queued_handlers.pop_front())
+	else:
+		_rebuild_group_cache()
 
 
 func _push_handler(new_handler: NotificationHandler) -> void:
 	_shown_handlers.push_back(new_handler)
+	_rebuild_group_cache()
+
+
+func _rebuild_group_cache() -> void:
 	_group_cache.clear()
 	
 	for handler in _shown_handlers:
@@ -159,7 +180,8 @@ func _appear_animator(notif: Control) -> void:
 			if _shall_apply_incomming_behind():
 				notif.z_index = -1
 			
-			var container: CenterContainer = _build_container_for(notif)
+			var container: Control = _build_container_for(notif)
+			notif.position = _get_offset_to_offscreen(appear_animation_type, notif)
 			notif.show()
 			
 			await _apply_appear_tween_properties(notif.create_tween().tween_property(
@@ -252,8 +274,8 @@ func _get_offset_to_offscreen(animation: int, notif: Control) -> Vector2:
 	return Vector2(0, 0)
 
 
-func _build_container_for(notif: Control) -> Container:
-	var container: Container = CenterContainer.new()
+func _build_container_for(notif: Control) -> Control:
+	var container: Control = Control.new()
 	container.custom_minimum_size = notif.size
 	container.size_flags_horizontal = notif.size_flags_horizontal
 	notif.add_sibling(container)
@@ -261,7 +283,7 @@ func _build_container_for(notif: Control) -> Container:
 	return container
 
 
-func _remove_container(container: Container, notif: Control) -> void:
+func _remove_container(container: Control, notif: Control) -> void:
 	container.remove_child(notif)
 	container.add_sibling(notif)
 	remove_child(container)
