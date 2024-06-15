@@ -181,6 +181,8 @@ func _appear_animator(notif: Control) -> void:
 				notif.z_index = -1
 			
 			notif.show()
+			if notif.size_flags_horizontal & (SIZE_SHRINK_BEGIN|SIZE_SHRINK_CENTER|SIZE_SHRINK_END):
+				fit_child_in_rect(notif, Rect2())
 			var container: Control = _build_container_for(notif)
 			notif.position = _get_offset_to_offscreen(appear_animation_type, notif)
 			
