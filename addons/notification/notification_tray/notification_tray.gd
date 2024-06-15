@@ -32,6 +32,20 @@ enum Gravity {
 	UPSIDE_DOWN,
 }
 
+
+## An optional singleton for project-wise notifications.
+## See [member use_as_singleton] and [method push_global].
+static var shared: NotificationTray
+
+
+## If true, this tray will be accessible trough [member NotificationTray.shared].
+@export var use_as_singleton: bool = true:
+	set(new):
+		use_as_singleton = new
+		if use_as_singleton:
+			NotificationTray.shared = self
+		elif NotificationTray.shared == self:
+			NotificationTray.shared = null
 ## The maximum amount of notification that can be visible at a time.
 @export var maximum_shown_notifications: int = 50:
 	set(new):
@@ -95,6 +109,25 @@ var custom_appear_animation: Callable
 ##     notif.hide()
 ## [/codeblock]
 var custom_disappear_animation: Callable
+
+
+## If [member NotificationTray.shared] is defined, push notification to it and return true, otherwise return false.
+## In failure case, if [param queue_free_if_no_shared_tray] is true, the given notif
+## will be automatically queue_freed.
+static func push_global(notif: Control, queue_free_if_no_shared_tray: bool = true) -> bool:
+	if shared:
+		shared.push(notif)
+		return true
+	
+	if queue_free_if_no_shared_tray:
+		notif.queue_free()
+	
+	return false
+
+
+func _ready() -> void:
+	if use_as_singleton:
+		NotificationTray.shared = self
 
 
 var _queued_handlers: Array[NotificationHandler] = []
