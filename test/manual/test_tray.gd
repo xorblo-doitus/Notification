@@ -20,11 +20,13 @@ func push_random() -> void:
 	notification_tray.push(_get_random_scene().instantiate())
 
 
+var _scenes: Array[PackedScene] = [
+	preload("res://test/manual/random_notifications/container.tscn"),
+	preload("res://test/manual/random_notifications/random_base_notification.tscn"),
+	preload("res://test/manual/random_notifications/colored.tscn"),
+]
 func _get_random_scene() -> PackedScene:
-	if randf() < 0.5:
-		return preload("res://test/manual/random_notifications/container.tscn")
-	
-	return preload("res://test/manual/random_notifications/colored.tscn")
+	return _scenes.pick_random()
 
 
 func _on_add_pressed() -> void:

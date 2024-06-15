@@ -1,0 +1,5 @@
+[gd_resource type="Theme" format=3 uid="uid://cgxsmaub217c8"]
+
+[resource]
+BaseNotification/base_type = &"PanelContainer"
+NotificationTray/base_type = &"VBoxContainer"

@@ -13,9 +13,18 @@ Early development
 Download only `res://addons/notification`.
 
 
+## How to use
+
+Instantiate `res://addons/notification/notification_traynotification_tray.tscn` somewhere in your UI.
+Push notifications to it. It can either be custom controls, the base notification in `res://addons/notification/notifications/base_notification.tscn` or a custom control using BaseNotification as class. (But notifications under `/addon/notification/notifications` are only helpers/examples, you are not forced to use them.)
+
+
 ## Theme type variations
 
 - NotificationTray (inheriting VBoxContainer)
+- BaseNotification (inheriting PanelContainer)
+
+See also "/addons/notification/example_theme.tres".
 
 
 ## Godot version

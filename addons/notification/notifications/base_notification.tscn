@@ -1,0 +1,50 @@
+[gd_scene load_steps=3 format=3 uid="uid://bn30375kwx2ua"]
+
+[ext_resource type="Script" path="res://addons/notification/notifications/base_notification.gd" id="1_4t4wo"]
+[ext_resource type="Texture2D" uid="uid://km5qbi3qds8j" path="res://icon.svg" id="2_ppmq6"]
+
+[node name="BaseNotification" type="PanelContainer" node_paths=PackedStringArray("title_label", "description_label", "icon_rect")]
+offset_right = 305.0
+offset_bottom = 128.0
+theme_type_variation = &"BaseNotification"
+script = ExtResource("1_4t4wo")
+title_label = NodePath("MainContainer/VBoxContainer/TitleContainer/Title")
+description_label = NodePath("MainContainer/VBoxContainer/DescContainer/Description")
+icon_rect = NodePath("MainContainer/Icon")
+
+[node name="MainContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="MainContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+texture = ExtResource("2_ppmq6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TitleContainer" type="HBoxContainer" parent="MainContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MainContainer/VBoxContainer/TitleContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(128, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DescContainer" type="HBoxContainer" parent="MainContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Description" type="RichTextLabel" parent="MainContainer/VBoxContainer/DescContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(128, 32)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[connection signal="theme_changed" from="." to="." method="_on_theme_changed"]

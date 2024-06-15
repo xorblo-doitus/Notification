@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://d26ycbhy6clj3"]
+
+[ext_resource type="PackedScene" uid="uid://bn30375kwx2ua" path="res://addons/notification/notifications/base_notification.tscn" id="1_ohv84"]
+[ext_resource type="Script" path="res://test/manual/random_notifications/random_base_notification.gd" id="2_e6u8h"]
+
+[node name="RandomBaseNotification" instance=ExtResource("1_ohv84")]
+script = ExtResource("2_e6u8h")
+title = "You did it!"
+description = "I am a very very long description and I should be shortened... Yes I should really... But I still keep growing more and more because the dev need a very long description to stress test the UI."
+
+[node name="Icon" parent="MainContainer" index="0"]
+visible = true
+
+[node name="Title" parent="MainContainer/VBoxContainer/TitleContainer" index="0"]
+visible = true
+text = "You did it!"
+
+[node name="Description" parent="MainContainer/VBoxContainer/DescContainer" index="0"]
+visible = true
+text = "I am a very very long description and I should be shortened... Yes I should really... But I still keep growing more and more because the dev need a very long description to stress test the UI."
