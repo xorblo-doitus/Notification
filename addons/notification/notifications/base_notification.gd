@@ -1,4 +1,5 @@
 @tool
+@icon("res://addons/notification/notifications/base_notification_icon.svg")
 class_name BaseNotification
 extends PanelContainer
 
@@ -30,7 +31,7 @@ extends PanelContainer
 		_adapt_to_description()
 ## If the next field is unused, the corresponding control will be hiden.
 @export var hide_if_null_icon: bool = true
-@export var icon_texture: Texture = preload("res://icon.svg"):
+@export var icon_texture: Texture = preload("res://addons/notification/notifications/information_icon.svg"):
 	set(new):
 		icon_texture = new
 		_adapt_to_icon_texture()

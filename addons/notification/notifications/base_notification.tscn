@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bn30375kwx2ua"]
 
 [ext_resource type="Script" path="res://addons/notification/notifications/base_notification.gd" id="1_4t4wo"]
-[ext_resource type="Texture2D" uid="uid://km5qbi3qds8j" path="res://icon.svg" id="2_ppmq6"]
+[ext_resource type="Texture2D" uid="uid://dmgwbtquyd7fa" path="res://addons/notification/notifications/information_icon.svg" id="2_n034g"]
 
 [node name="BaseNotification" type="PanelContainer" node_paths=PackedStringArray("title_label", "description_label", "icon_rect")]
 offset_right = 305.0
@@ -17,9 +17,9 @@ layout_mode = 2
 
 [node name="Icon" type="TextureRect" parent="MainContainer"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
-texture = ExtResource("2_ppmq6")
+texture = ExtResource("2_n034g")
+stretch_mode = 5
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MainContainer"]
 layout_mode = 2
