@@ -57,10 +57,13 @@ static var shared: NotificationTray:
 		maximum_shown_notifications = new
 		while _queued_handlers and _shown_handlers.size() < maximum_shown_notifications:
 			_process_handler.call_deferred(_queued_handlers.pop_front())
-@export var notification_duration: float = 3.0
-@export var notification_duration_multiplier: float = 1.0
-@export var notification_squish_time: float = 0.5
+
+@export_group("Notifications", "notifications_")
+@export var notifications_duration: float = 3.0
+@export var notifications_duration_multiplier: float = 1.0
+@export var notifications_squish_time: float = 0.5
 @export var notifications_size_flags_horizontal: SizeFlags = SIZE_SHRINK_END
+@export_group("")
 
 @export var gravity: Gravity = Gravity.NORMAL:
 	set(new):
@@ -80,7 +83,7 @@ static var shared: NotificationTray:
 ## is come from up, forces incoming
 ## notification to have a -1 relative z_index, so that they don't hide
 ## already here notifications while traveling.
-@export var incoming_behind: bool = true
+@export var appear_animation_behind: bool = true
 @export_group("Disappear animation", "disappear_animation")
 @export var disappear_animation_type: DisappearAnimation = DisappearAnimation.GO_TO_DOWN
 @export var disappear_animation_time: float = 0.2
@@ -90,7 +93,7 @@ static var shared: NotificationTray:
 ## is go to up, forces outgoing
 ## notification to have a -1 relative z_index, so that they don't hide
 ## already here notifications while traveling.
-@export var outgoing_behind: bool = true
+@export var disappear_animation_behind: bool = true
 @export_group("")
 
 
@@ -170,8 +173,8 @@ func push(notif: Control) -> NotificationHandler:
 	handler._notif = notif
 	#handler.appear_animator = _appear_animator
 	#handler.disappear_animator = _disappear_animator
-	#handler.duration = notification_duration
-	#handler.duration_multiplier = notification_duration_multiplier
+	#handler.duration = notifications_duration
+	#handler.duration_multiplier = notifications_duration_multiplier
 	
 	#notif.size_flags_horizontal = notifications_size_flags_horizontal
 	
@@ -206,7 +209,7 @@ func _process_handler(handler: NotificationHandler) -> void:
 	
 	await handler.disappear()
 	
-	await handler.squish(notification_squish_time)
+	await handler.squish(notifications_squish_time)
 	
 	handler._notif.free()
 	_shown_handlers.erase(handler)
@@ -223,9 +226,9 @@ func _apply_defaults_to(handler: NotificationHandler) -> NotificationHandler:
 	if handler.disappear_animator == Callable():
 		handler.disappear_animator = _disappear_animator
 	if handler.duration == -1:
-		handler.duration = notification_duration
+		handler.duration = notifications_duration
 	if handler.duration_multiplier == -1:
-		handler.duration_multiplier = notification_duration_multiplier
+		handler.duration_multiplier = notifications_duration_multiplier
 	return handler
 
 
@@ -304,7 +307,7 @@ func _disappear_animator(notif: Control) -> void:
 				appear_animation_time,
 			)).finished
 		DisappearAnimation.GO_TO_LEFT, DisappearAnimation.GO_TO_RIGHT, DisappearAnimation.GO_TO_UP, DisappearAnimation.GO_TO_DOWN:
-			if _shall_apply_outgoing_behind():
+			if _shall_apply_disappear_animation_behind():
 				notif.z_index = -1
 			
 			var container: Control = _build_container_for(notif)
@@ -319,7 +322,7 @@ func _disappear_animator(notif: Control) -> void:
 			
 			_remove_container(container, notif)
 			
-			if _shall_apply_outgoing_behind():
+			if _shall_apply_disappear_animation_behind():
 				notif.z_index = 0
 
 
@@ -333,15 +336,15 @@ func _apply_disappear_tween_properties(property_tweener: PropertyTweener) -> Pro
 
 func _shall_apply_incomming_behind() -> bool:
 	return (
-		incoming_behind
+		appear_animation_behind
 		and appear_animation_type == AppearAnimation.COME_FROM_UP
 		and gravity == Gravity.UPSIDE_DOWN
 	)
 
 
-func _shall_apply_outgoing_behind() -> bool:
+func _shall_apply_disappear_animation_behind() -> bool:
 	return (
-		outgoing_behind
+		disappear_animation_behind
 		and disappear_animation_type == DisappearAnimation.GO_TO_UP
 		and gravity == Gravity.NORMAL
 	)
