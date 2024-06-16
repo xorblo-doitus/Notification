@@ -167,7 +167,6 @@ static func _process_on_hold_notifications() -> void:
 		return
 	
 	for on_hold in _global_notifications_on_hold:
-		shared.notification_pushed.emit(on_hold)
 		shared._process_handler.call_deferred(on_hold)
 
 
@@ -188,12 +187,21 @@ func push(notif: Control) -> NotificationHandler:
 	return handler
 
 
+## You don't need to call this if you just pushed a notification.
+## This method is meant to be used if you you want to reuse an handler that
+## went trough all the process of appearing, disappearing and squishing.
+func reuse_handler(handler: NotificationHandler) -> void:
+	_process_handler(handler)
+
+
 ## Always call deferred please.
 func _process_handler(handler: NotificationHandler) -> void:
 	if handler.group != null and handler.group in _group_cache:
 		return
 	
 	if _shown_handlers.size() >= maximum_shown_notifications:
+		notification_pushed.emit(handler)
+		handler.pushed_to.emit(self)
 		_queued_handlers.append(handler)
 		return
 	
@@ -391,6 +399,16 @@ func _remove_container(container: Control, notif: Control) -> void:
 
 
 class NotificationHandler extends RefCounted:
+	## It does not always mean that it appeared.
+	signal pushed_to(tray: NotificationTray)
+	signal appearing()
+	signal appeared()
+	signal disappearing()
+	signal disappeared()
+	## Emitted when the notif disappeared and was squished to smoothly release room.
+	## This mean it can be reused trough [method NotificationTray.reuse_handler].
+	signal squished()
+	
 	enum EndBehavior {
 		## Do nothing
 		NONE,
@@ -432,10 +450,14 @@ class NotificationHandler extends RefCounted:
 	var notif: Control
 	
 	func appear() -> void:
+		appearing.emit()
 		await appear_animator.call(notif)
+		appeared.emit()
 	
 	func disappear() -> void:
+		disappearing.emit()
 		await disappear_animator.call(notif)
+		disappeared.emit()
 	
 	func squish(duration: float) -> void:
 		var dummy: Control = Control.new()
@@ -451,6 +473,7 @@ class NotificationHandler extends RefCounted:
 		).finished
 		
 		dummy.queue_free()
+		squished.emit()
 	
 	func clean_up() -> void:
 		match end_behavior:
