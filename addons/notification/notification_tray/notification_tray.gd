@@ -5,6 +5,9 @@ extends VBoxContainer
 ## An in-game notification tray to display things such as achievments, errors...
 
 
+## Emitted when a notification was ignored, for example because a notification
+## of the same group was already shown.
+signal notification_ignored(handler: NotificationHandler)
 ## Emitted when a notif is [i]pushed[/i]. It does not always mean that it appeared.
 signal notification_pushed(handler: NotificationHandler)
 signal notification_appearing(handler: NotificationHandler)
@@ -197,6 +200,7 @@ func reuse_handler(handler: NotificationHandler) -> void:
 ## Always call deferred please.
 func _process_handler(handler: NotificationHandler) -> void:
 	if handler.group != null and handler.group in _group_cache:
+		notification_ignored.emit(handler)
 		return
 	
 	if _shown_handlers.size() >= maximum_shown_notifications:
