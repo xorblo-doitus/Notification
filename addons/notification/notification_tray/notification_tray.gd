@@ -221,7 +221,7 @@ func _process_handler(handler: NotificationHandler) -> void:
 	await handler.squish(notifications_squish_time)
 	notification_squished.emit(handler)
 	
-	handler.notif.free()
+	handler.clean_up()
 	_shown_handlers.erase(handler)
 	
 	if _queued_handlers:
@@ -391,6 +391,15 @@ func _remove_container(container: Control, notif: Control) -> void:
 
 
 class NotificationHandler extends RefCounted:
+	enum EndBehavior {
+		## Do nothing
+		NONE,
+		## Call [method Node.queue_free] on the notif.
+		QUEUE_FREE,
+		## Call [method Object.free] on the notif.
+		FREE,
+	}
+	
 	var appear_animator: Callable
 	func set_appear_animator(animator: Callable) -> NotificationHandler:
 		appear_animator = animator
@@ -418,6 +427,8 @@ class NotificationHandler extends RefCounted:
 		duration_multiplier = new_duration_multiplier
 		return self
 	
+	var end_behavior: EndBehavior = EndBehavior.QUEUE_FREE
+	
 	var notif: Control
 	
 	func appear() -> void:
@@ -440,3 +451,12 @@ class NotificationHandler extends RefCounted:
 		).finished
 		
 		dummy.queue_free()
+	
+	func clean_up() -> void:
+		match end_behavior:
+			EndBehavior.NONE:
+				return
+			EndBehavior.QUEUE_FREE:
+				notif.queue_free()
+			EndBehavior.FREE:
+				notif.free()
