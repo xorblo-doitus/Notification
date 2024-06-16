@@ -5,6 +5,16 @@ extends VBoxContainer
 ## An in-game notification tray to display things such as achievments, errors...
 
 
+## Emitted when a notif is [i]pushed[/i]. It does not always mean that it appeared.
+signal notification_pushed(handler: NotificationHandler)
+signal notification_appearing(handler: NotificationHandler)
+signal notification_appeared(handler: NotificationHandler)
+signal notification_disappearing(handler: NotificationHandler)
+signal notification_disappeared(handler: NotificationHandler)
+## Emitted when the notif disappeared and was squished to smoothly release room.
+signal notification_squished(handler: NotificationHandler)
+
+
 enum AppearAnimation {
 	NONE,
 	COME_FROM_LEFT,
@@ -145,7 +155,7 @@ static func push_global(notif: Control, failure_behavior: OnGlobalPushFail = OnG
 			notif.free()
 		OnGlobalPushFail.WAIT_FOR_SHARED:
 			var handler: NotificationHandler = NotificationHandler.new()
-			handler._notif = notif
+			handler.notif = notif
 			_global_notifications_on_hold.push_back(handler)
 			return handler
 	
@@ -157,6 +167,7 @@ static func _process_on_hold_notifications() -> void:
 		return
 	
 	for on_hold in _global_notifications_on_hold:
+		shared.notification_pushed.emit(on_hold)
 		shared._process_handler.call_deferred(on_hold)
 
 
@@ -170,13 +181,7 @@ var _shown_handlers: Array[NotificationHandler] = []
 var _group_cache: Array = []
 func push(notif: Control) -> NotificationHandler:
 	var handler: NotificationHandler = NotificationHandler.new()
-	handler._notif = notif
-	#handler.appear_animator = _appear_animator
-	#handler.disappear_animator = _disappear_animator
-	#handler.duration = notifications_duration
-	#handler.duration_multiplier = notifications_duration_multiplier
-	
-	#notif.size_flags_horizontal = notifications_size_flags_horizontal
+	handler.notif = notif
 	
 	_process_handler.call_deferred(handler)
 	
@@ -195,23 +200,28 @@ func _process_handler(handler: NotificationHandler) -> void:
 	_apply_defaults_to(handler)
 	_push_handler(handler)
 	
-	handler._notif.size_flags_horizontal = notifications_size_flags_horizontal
-	handler._notif.hide()
-	add_child(handler._notif)
+	handler.notif.size_flags_horizontal = notifications_size_flags_horizontal
+	handler.notif.hide()
+	add_child(handler.notif)
 	if gravity == Gravity.NORMAL:
-		move_child(handler._notif, 0)
+		move_child(handler.notif, 0)
 	
+	notification_appearing.emit(handler)
 	await handler.appear()
+	notification_appeared.emit(handler)
 	
 	await get_tree().create_timer(
 		handler.duration * handler.duration_multiplier,
 	).timeout
 	
+	notification_disappearing.emit(handler)
 	await handler.disappear()
+	notification_disappeared.emit(handler)
 	
 	await handler.squish(notifications_squish_time)
+	notification_squished.emit(handler)
 	
-	handler._notif.free()
+	handler.notif.free()
 	_shown_handlers.erase(handler)
 	
 	if _queued_handlers:
@@ -408,20 +418,19 @@ class NotificationHandler extends RefCounted:
 		duration_multiplier = new_duration_multiplier
 		return self
 	
-	var _notif: Control
-	
+	var notif: Control
 	
 	func appear() -> void:
-		await appear_animator.call(_notif)
+		await appear_animator.call(notif)
 	
 	func disappear() -> void:
-		await disappear_animator.call(_notif)
+		await disappear_animator.call(notif)
 	
 	func squish(duration: float) -> void:
 		var dummy: Control = Control.new()
-		_notif.add_sibling(dummy)
-		dummy.custom_minimum_size = _notif.size
-		_notif.get_parent().remove_child(_notif)
+		notif.add_sibling(dummy)
+		dummy.custom_minimum_size = notif.size
+		notif.get_parent().remove_child(notif)
 		
 		await dummy.create_tween().tween_property(
 			dummy,
