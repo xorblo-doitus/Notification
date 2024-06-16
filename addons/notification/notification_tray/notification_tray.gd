@@ -299,7 +299,7 @@ func _disappear_animator(notif: Control) -> void:
 			if _shall_apply_outgoing_behind():
 				notif.z_index = -1
 			
-			var container: CenterContainer = _build_container_for(notif)
+			var container: Control = _build_container_for(notif)
 			notif.show()
 			
 			await _apply_disappear_tween_properties(notif.create_tween().tween_property(
