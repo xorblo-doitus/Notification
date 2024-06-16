@@ -70,13 +70,8 @@ static var shared: NotificationTray:
 		maximum_shown_notifications = new
 		while _queued_handlers and _shown_handlers.size() < maximum_shown_notifications:
 			_process_handler.call_deferred(_queued_handlers.pop_front())
-
-@export_group("Notifications", "notifications_")
-@export var notifications_duration: float = 3.0
-@export var notifications_duration_multiplier: float = 1.0
-@export var notifications_squish_time: float = 0.5
-@export var notifications_size_flags_horizontal: SizeFlags = SIZE_SHRINK_END
-@export_group("")
+## Played every time a notifiation appear.
+@export var audio_stream_player: AudioStreamPlayer
 
 @export var gravity: Gravity = Gravity.NORMAL:
 	set(new):
@@ -86,6 +81,12 @@ static var shared: NotificationTray:
 			if gravity == Gravity.NORMAL
 			else BoxContainer.ALIGNMENT_BEGIN
 		)
+
+@export_group("Notifications", "notifications_")
+@export var notifications_duration: float = 3.0
+@export var notifications_duration_multiplier: float = 1.0
+@export var notifications_squish_time: float = 0.5
+@export var notifications_size_flags_horizontal: SizeFlags = SIZE_SHRINK_END
 
 @export_group("Appear animation", "appear_animation")
 @export var appear_animation_type: AppearAnimation = AppearAnimation.COME_FROM_RIGHT
@@ -97,6 +98,7 @@ static var shared: NotificationTray:
 ## notification to have a -1 relative z_index, so that they don't hide
 ## already here notifications while traveling.
 @export var appear_animation_behind: bool = true
+
 @export_group("Disappear animation", "disappear_animation")
 @export var disappear_animation_type: DisappearAnimation = DisappearAnimation.GO_TO_DOWN
 @export var disappear_animation_time: float = 0.2
@@ -217,6 +219,9 @@ func _process_handler(handler: NotificationHandler) -> void:
 	add_child(handler.notif)
 	if gravity == Gravity.NORMAL:
 		move_child(handler.notif, 0)
+	
+	if audio_stream_player:
+		audio_stream_player.play()
 	
 	notification_appearing.emit(handler)
 	await handler.appear()

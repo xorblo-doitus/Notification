@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://d4gpka6cf7mxi"]
+[gd_scene load_steps=7 format=3 uid="uid://d4gpka6cf7mxi"]
 
 [ext_resource type="Theme" uid="uid://cgxsmaub217c8" path="res://addons/notification/example_theme.tres" id="1_oxpg2"]
 [ext_resource type="PackedScene" uid="uid://bhhwk2ugwjxtu" path="res://addons/notification/notification_tray/notification_tray.tscn" id="1_tbp8t"]
 [ext_resource type="Script" path="res://test/manual/test_tray.gd" id="1_wx4g1"]
+[ext_resource type="AudioStream" uid="uid://cwfe5thdo6nqf" path="res://addons/notification/notifications/notification.wav" id="4_n3it8"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qiscu"]
 content_margin_left = 4.0
@@ -29,7 +30,7 @@ grow_vertical = 2
 theme = ExtResource("1_oxpg2")
 script = ExtResource("1_wx4g1")
 
-[node name="NotificationTray" parent="." instance=ExtResource("1_tbp8t")]
+[node name="NotificationTray" parent="." node_paths=PackedStringArray("audio_stream_player") instance=ExtResource("1_tbp8t")]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -40,10 +41,15 @@ grow_horizontal = 0
 grow_vertical = 0
 scale = Vector2(1, 1.01074)
 theme = SubResource("Theme_1k4eq")
+audio_stream_player = NodePath("AudioStreamPlayer")
 appear_animation_type = 0
 appear_animation_time = 1.0
 disappear_animation_type = 0
 disappear_animation_time = 1.0
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="NotificationTray"]
+stream = ExtResource("4_n3it8")
+max_polyphony = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
