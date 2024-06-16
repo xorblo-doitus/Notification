@@ -40,10 +40,11 @@ grow_horizontal = 0
 grow_vertical = 0
 scale = Vector2(1, 1.01074)
 theme = SubResource("Theme_1k4eq")
-notification_duration_multiplier = 0.5
+notification_duration_multiplier = 3.0
 appear_animation_type = 0
 appear_animation_time = 1.0
-disappear_animation_type = 4
+disappear_animation_type = 0
+disappear_animation_time = 1.0
 
 [node name="Add" type="Button" parent="."]
 layout_mode = 1

@@ -6,6 +6,7 @@ extends VBoxContainer
 
 
 enum AppearAnimation {
+	NONE,
 	COME_FROM_LEFT,
 	COME_FROM_RIGHT,
 	COME_FROM_UP,
@@ -16,6 +17,7 @@ enum AppearAnimation {
 }
 
 enum DisappearAnimation {
+	NONE,
 	GO_TO_LEFT,
 	GO_TO_RIGHT,
 	GO_TO_UP,
@@ -242,6 +244,9 @@ func _rebuild_group_cache() -> void:
 
 func _appear_animator(notif: Control) -> void:
 	match appear_animation_type:
+		AppearAnimation.NONE:
+			notif.show()
+			return
 		AppearAnimation.CUSTOM:
 			custom_appear_animation.call(notif)
 		AppearAnimation.TRANSPARENCY:
@@ -286,6 +291,9 @@ func _apply_appear_tween_properties(property_tweener: PropertyTweener) -> Proper
 
 func _disappear_animator(notif: Control) -> void:
 	match disappear_animation_type:
+		DisappearAnimation.NONE:
+			notif.hide()
+			return
 		DisappearAnimation.CUSTOM:
 			custom_disappear_animation.call(notif)
 		DisappearAnimation.TRANSPARENCY:
