@@ -180,7 +180,7 @@ func _ready() -> void:
 
 var _queued_handlers: Array[NotificationHandler] = []
 var _shown_handlers: Array[NotificationHandler] = []
-var _group_cache: Array = []
+var _group_cache: Dictionary = {}
 func push(notif: Control) -> NotificationHandler:
 	var handler: NotificationHandler = NotificationHandler.new()
 	handler.notif = notif
@@ -199,7 +199,7 @@ func reuse_handler(handler: NotificationHandler) -> void:
 
 ## Always call deferred please.
 func _process_handler(handler: NotificationHandler) -> void:
-	if handler.group != null and handler.group in _group_cache:
+	if handler.group != null and _group_cache.get(handler.group, 0) >= handler.group.max_amount:
 		notification_ignored.emit(handler)
 		return
 	
@@ -263,8 +263,8 @@ func _rebuild_group_cache() -> void:
 	_group_cache.clear()
 	
 	for handler in _shown_handlers:
-		if handler.group !=  null and handler.group not in _group_cache:
-			_group_cache.push_back(handler.group)
+		if handler.group != null:
+			_group_cache[handler.group] = 1 + _group_cache.get(handler.group, 0)
 
 
 func _appear_animator(notif: Control) -> void:
@@ -402,7 +402,27 @@ func _remove_container(container: Control, notif: Control) -> void:
 	container.queue_free()
 
 
+class Group extends RefCounted:
+	## Can be used to alter behavior when multiple notifications of the same
+	## group pushed to a tray. 
+	
+	## An indicative name.
+	## [br][br]
+	## [b]Warning:[/b] Different groups with the same name are [b]not[/b]
+	## considered to be the same group. You have to use the same instance.
+	var name: String
+	func set_name(new_name: String) -> Group:
+		name = new_name
+		return self
+	var max_amount: int = 1
+	func set_max_amount(new_max_amount: int) -> Group:
+		max_amount = new_max_amount
+		return self
+
+
 class NotificationHandler extends RefCounted:
+	## Defines properties of a notification.
+	
 	## It does not always mean that it appeared.
 	signal pushed_to(tray: NotificationTray)
 	signal appearing()
@@ -434,8 +454,8 @@ class NotificationHandler extends RefCounted:
 	
 	## If there is already a notification of the same group (and if group is
 	## not null), this notification will be discarded.
-	var group: Variant
-	func set_group(new_group: Variant) -> NotificationHandler:
+	var group: Group
+	func set_group(new_group: Group) -> NotificationHandler:
 		group = new_group
 		return self
 	

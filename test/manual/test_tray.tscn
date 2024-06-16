@@ -45,14 +45,22 @@ appear_animation_time = 1.0
 disappear_animation_type = 0
 disappear_animation_time = 1.0
 
-[node name="Add" type="Button" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -8.0
-offset_right = 8.0
+offset_top = -40.0
+offset_right = 40.0
 grow_vertical = 0
+
+[node name="Add" type="Button" parent="VBoxContainer"]
+layout_mode = 2
 text = "~add notification~"
 
-[connection signal="pressed" from="Add" to="." method="_on_add_pressed"]
+[node name="AddGroup" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "~add notification with group~"
+
+[connection signal="pressed" from="VBoxContainer/Add" to="." method="_on_add_pressed"]
+[connection signal="pressed" from="VBoxContainer/AddGroup" to="." method="_on_add_group_pressed"]
