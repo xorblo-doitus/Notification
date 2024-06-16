@@ -17,7 +17,10 @@ func _process(_delta: float) -> void:
 
 
 func push_random() -> void:
-	NotificationTray.push_global(_get_random_scene().instantiate())
+	NotificationTray.push_global(
+		_get_random_scene().instantiate(),
+		NotificationTray.OnGlobalPushFail.WAIT_FOR_SHARED
+	)
 
 
 var _scenes: Array[PackedScene] = [

@@ -35,7 +35,10 @@ enum Gravity {
 
 ## An optional singleton for project-wise notifications.
 ## See [member use_as_singleton] and [method push_global].
-static var shared: NotificationTray
+static var shared: NotificationTray:
+	set(new):
+		shared = new
+		_process_on_hold_notifications()
 
 
 ## If true, this tray will be accessible trough [member NotificationTray.shared].
@@ -111,18 +114,45 @@ var custom_appear_animation: Callable
 var custom_disappear_animation: Callable
 
 
-## If [member NotificationTray.shared] is defined, push notification to it and return true, otherwise return false.
-## In failure case, if [param queue_free_if_no_shared_tray] is true, the given notif
-## will be automatically queue_freed.
-static func push_global(notif: Control, queue_free_if_no_shared_tray: bool = true) -> bool:
+enum OnGlobalPushFail {
+	## Do nothing
+	NONE,
+	## Call [method Node.queue_free] on the notif.
+	QUEUE_FREE,
+	## Call [method Object.free] on the notif.
+	FREE,
+	## Place this notif on hold until [member shared] is defined.
+	WAIT_FOR_SHARED,
+}
+static var _global_notifications_on_hold: Array[NotificationHandler] = []
+## If [member NotificationTray.shared] is defined (or if [param failure_behavior]
+## is WAIT_FOR_SHARED), push notification to it
+## and return the handler, otherwise return null.
+## In failure case, reacts accordingly to [param failure_behavior].
+static func push_global(notif: Control, failure_behavior: OnGlobalPushFail = OnGlobalPushFail.NONE) -> NotificationHandler:
 	if shared:
-		shared.push(notif)
-		return true
+		return shared.push(notif)
 	
-	if queue_free_if_no_shared_tray:
-		notif.queue_free()
+	match failure_behavior:
+		OnGlobalPushFail.QUEUE_FREE:
+			notif.queue_free()
+		OnGlobalPushFail.QUEUE_FREE:
+			notif.free()
+		OnGlobalPushFail.WAIT_FOR_SHARED:
+			var handler: NotificationHandler = NotificationHandler.new()
+			handler._notif = notif
+			_global_notifications_on_hold.push_back(handler)
+			return handler
 	
-	return false
+	return null
+
+
+static func _process_on_hold_notifications() -> void:
+	if shared == null:
+		return
+	
+	for on_hold in _global_notifications_on_hold:
+		shared._process_handler.call_deferred(on_hold)
 
 
 func _ready() -> void:
@@ -136,18 +166,19 @@ var _group_cache: Array = []
 func push(notif: Control) -> NotificationHandler:
 	var handler: NotificationHandler = NotificationHandler.new()
 	handler._notif = notif
-	handler.appear_animator = _appear_animator
-	handler.disappear_animator = _disappear_animator
-	handler.duration = notification_duration
-	handler.duration_multiplier = notification_duration_multiplier
+	#handler.appear_animator = _appear_animator
+	#handler.disappear_animator = _disappear_animator
+	#handler.duration = notification_duration
+	#handler.duration_multiplier = notification_duration_multiplier
 	
-	notif.size_flags_horizontal = notifications_size_flags_horizontal
+	#notif.size_flags_horizontal = notifications_size_flags_horizontal
 	
 	_process_handler.call_deferred(handler)
 	
 	return handler
 
 
+## Always call deferred please.
 func _process_handler(handler: NotificationHandler) -> void:
 	if handler.group != null and handler.group in _group_cache:
 		return
@@ -156,9 +187,10 @@ func _process_handler(handler: NotificationHandler) -> void:
 		_queued_handlers.append(handler)
 		return
 	
+	_apply_defaults_to(handler)
 	_push_handler(handler)
 	
-	
+	handler._notif.size_flags_horizontal = notifications_size_flags_horizontal
 	handler._notif.hide()
 	add_child(handler._notif)
 	if gravity == Gravity.NORMAL:
@@ -181,6 +213,18 @@ func _process_handler(handler: NotificationHandler) -> void:
 		_process_handler.call_deferred(_queued_handlers.pop_front())
 	else:
 		_rebuild_group_cache()
+
+
+func _apply_defaults_to(handler: NotificationHandler) -> NotificationHandler:
+	if handler.appear_animator == Callable():
+		handler.appear_animator = _appear_animator
+	if handler.disappear_animator == Callable():
+		handler.disappear_animator = _disappear_animator
+	if handler.duration == -1:
+		handler.duration = notification_duration
+	if handler.duration_multiplier == -1:
+		handler.duration_multiplier = notification_duration_multiplier
+	return handler
 
 
 func _push_handler(new_handler: NotificationHandler) -> void:
@@ -343,12 +387,12 @@ class NotificationHandler extends RefCounted:
 		group = new_group
 		return self
 	
-	var duration: float
+	var duration: float = -1
 	func set_duration(new_duration: float) -> NotificationHandler:
 		duration = new_duration
 		return self
 	
-	var duration_multiplier: float
+	var duration_multiplier: float = -1
 	func set_duration_multiplier(new_duration_multiplier: float) -> NotificationHandler:
 		duration_multiplier = new_duration_multiplier
 		return self
