@@ -475,6 +475,9 @@ class NotificationHandler extends RefCounted:
 		return self
 	
 	var end_behavior: EndBehavior = EndBehavior.QUEUE_FREE
+	func set_end_behavior(new_end_behavior: EndBehavior) -> NotificationHandler:
+		end_behavior = new_end_behavior
+		return self
 	
 	var notif: Control
 	
