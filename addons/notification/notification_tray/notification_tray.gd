@@ -220,7 +220,9 @@ func _process_handler(handler: NotificationHandler) -> void:
 	if gravity == Gravity.NORMAL:
 		move_child(handler.notif, 0)
 	
-	if audio_stream_player:
+	if handler.audio_stream_player:
+		handler.audio_stream_player.play()
+	elif audio_stream_player:
 		audio_stream_player.play()
 	
 	notification_appearing.emit(handler)
@@ -446,6 +448,11 @@ class NotificationHandler extends RefCounted:
 		## Call [method Object.free] on the notif.
 		FREE,
 	}
+	
+	var audio_stream_player: AudioStreamPlayer
+	func set_audio_stream_player(new_audio_stream_player: AudioStreamPlayer) -> NotificationHandler:
+		audio_stream_player = new_audio_stream_player
+		return self
 	
 	var appear_animator: Callable
 	func set_appear_animator(animator: Callable) -> NotificationHandler:

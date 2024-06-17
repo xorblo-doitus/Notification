@@ -68,5 +68,9 @@ text = "~add notification~"
 layout_mode = 2
 text = "~add notification with group~"
 
+[node name="AlternativeAudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_n3it8")
+pitch_scale = 0.21
+
 [connection signal="pressed" from="VBoxContainer/Add" to="." method="_on_add_pressed"]
 [connection signal="pressed" from="VBoxContainer/AddGroup" to="." method="_on_add_group_pressed"]

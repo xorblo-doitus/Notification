@@ -3,6 +3,7 @@ extends Control
 
 
 @onready var notification_tray: NotificationTray = $NotificationTray
+@onready var alternative_audio_stream_player: AudioStreamPlayer = $AlternativeAudioStreamPlayer
 
 
 
@@ -43,4 +44,4 @@ func _on_add_group_pressed() -> void:
 	NotificationTray.push_global(
 		notif,
 		NotificationTray.OnGlobalPushFail.WAIT_FOR_SHARED
-	).set_group(_group)
+	).set_group(_group).set_audio_stream_player(alternative_audio_stream_player)
