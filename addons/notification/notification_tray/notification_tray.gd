@@ -3,6 +3,9 @@ extends VBoxContainer
 
 
 ## An in-game notification tray to display things such as achievments, errors...
+##
+## [b]Note:[/b] If the pushed notification has a [code]marked_as_read[/code]
+## signal, the notification will be closed early when this signal is emitted.
 
 
 ## Emitted when a notification was ignored, for example because a notification
@@ -211,6 +214,28 @@ func _process_handler(handler: NotificationHandler) -> void:
 		_queued_handlers.append(handler)
 		return
 	
+	if handler.notif.has_signal(&"marked_as_read"):
+		handler.notif.marked_as_read.connect(
+			_process_early_disappearance.bind(handler)
+		)
+	
+	await _process_appearance(handler)
+	
+	if handler.is_marked_as_read:
+		_process_disappearance(handler)
+		return
+	
+	await get_tree().create_timer(
+		handler.duration * handler.duration_multiplier,
+	).timeout
+	
+	if handler.is_marked_as_read:
+		return
+	
+	_process_disappearance(handler)
+
+
+func _process_appearance(handler: NotificationHandler) -> void:
 	_apply_defaults_to(handler)
 	_push_handler(handler)
 	
@@ -225,20 +250,24 @@ func _process_handler(handler: NotificationHandler) -> void:
 	elif audio_stream_player:
 		audio_stream_player.play()
 	
-	notification_appearing.emit(handler)
-	await handler.appear()
-	notification_appeared.emit(handler)
+	await _show_handler(handler)
+
+
+func _process_early_disappearance(handler: NotificationHandler) -> void:
+	handler.is_marked_as_read = true
+	if handler.state == NotificationHandler.State.SHOWN:
+		_process_disappearance(handler)
+
+
+func _process_disappearance(handler: NotificationHandler) -> void:
+	assert(handler.state == NotificationHandler.State.SHOWN)
 	
-	await get_tree().create_timer(
-		handler.duration * handler.duration_multiplier,
-	).timeout
+	if handler.notif.has_signal(&"marked_as_read"):
+		handler.notif.marked_as_read.disconnect(_process_early_disappearance)
 	
-	notification_disappearing.emit(handler)
-	await handler.disappear()
-	notification_disappeared.emit(handler)
+	await _hide_handler(handler)
 	
-	await handler.squish(notifications_squish_time)
-	notification_squished.emit(handler)
+	await _squish_handler(handler)
 	
 	handler.clean_up()
 	_shown_handlers.erase(handler)
@@ -272,6 +301,23 @@ func _rebuild_group_cache() -> void:
 	for handler in _shown_handlers:
 		if handler.group != null:
 			_group_cache[handler.group] = 1 + _group_cache.get(handler.group, 0)
+
+
+func _show_handler(handler: NotificationHandler) -> void:
+	notification_appearing.emit(handler)
+	await handler.appear()
+	notification_appeared.emit(handler)
+
+
+func _hide_handler(handler: NotificationHandler) -> void:
+	notification_disappearing.emit(handler)
+	await handler.disappear()
+	notification_disappeared.emit(handler)
+
+
+func _squish_handler(handler) -> void:
+	await handler.squish(notifications_squish_time)
+	notification_squished.emit(handler)
 
 
 func _appear_animator(notif: Control) -> void:
@@ -486,19 +532,41 @@ class NotificationHandler extends RefCounted:
 		end_behavior = new_end_behavior
 		return self
 	
+	## Please avoid editing this property and prefer using a new hanlder created
+	## trough a push method.
 	var notif: Control
 	
+	enum State {
+		ORPHAN,
+		APPEARING,
+		SHOWN,
+		DISAPPEARING,
+		SQUISHING,
+		## This handler's notification has been freed.
+		DEAD,
+	}
+	## [b]READ-ONLY[/b]
+	var state: State = State.ORPHAN
+	## [b]READ-ONLY[/b] for unadvised users
+	var is_marked_as_read: bool = false
+	
+	
 	func appear() -> void:
+		is_marked_as_read = false
+		state = State.APPEARING
 		appearing.emit()
 		await appear_animator.call(notif)
 		appeared.emit()
+		state = State.SHOWN
 	
 	func disappear() -> void:
+		state = State.DISAPPEARING
 		disappearing.emit()
 		await disappear_animator.call(notif)
 		disappeared.emit()
 	
 	func squish(duration: float) -> void:
+		state = State.SQUISHING
 		var dummy: Control = Control.new()
 		notif.add_sibling(dummy)
 		dummy.custom_minimum_size = notif.size
@@ -517,8 +585,11 @@ class NotificationHandler extends RefCounted:
 	func clean_up() -> void:
 		match end_behavior:
 			EndBehavior.NONE:
+				state = State.ORPHAN
 				return
 			EndBehavior.QUEUE_FREE:
+				state = State.DEAD
 				notif.queue_free()
 			EndBehavior.FREE:
+				state = State.DEAD
 				notif.free()

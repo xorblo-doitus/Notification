@@ -4,6 +4,9 @@ class_name BaseNotification
 extends PanelContainer
 
 
+signal marked_as_read
+
+
 #enum IconPosition {
 	#NORMAL,
 	#TITLE_INLINE,
@@ -126,3 +129,7 @@ func _adapt_to_icon_texture() -> void:
 	#icon_rect.reparent(container, false)
 	#container.move_child(icon_rect, 0)
 	#icon_rect.owner = self
+
+
+func _on_close_pressed() -> void:
+	marked_as_read.emit()
