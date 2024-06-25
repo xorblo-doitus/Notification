@@ -6,6 +6,10 @@ extends VBoxContainer
 ##
 ## [b]Note:[/b] If the pushed notification has a [code]marked_as_read[/code]
 ## signal, the notification will be closed early when this signal is emitted.
+##
+## [b]Note:[/b] If the pushed notification has a [code]group_marked_as_read[/code]
+## signal, all notifications of the same group will be closed early
+## when this signal is emitted.
 
 
 ## Emitted when a notification was ignored, for example because a notification
@@ -219,6 +223,12 @@ func _process_handler(handler: NotificationHandler) -> void:
 			_process_early_disappearance.bind(handler)
 		)
 	
+	if handler.group and handler.notif.has_signal(&"group_marked_as_read"):
+		handler.notif.group_marked_as_read.connect(
+			_mark_group_as_read.bind(handler.group)
+		)
+		
+	
 	await _process_appearance(handler)
 	
 	if handler.is_marked_as_read:
@@ -233,6 +243,16 @@ func _process_handler(handler: NotificationHandler) -> void:
 		return
 	
 	_process_disappearance(handler)
+
+
+func _mark_group_as_read(group: Group) -> void:
+	_queued_handlers = _queued_handlers.filter(
+		func(handler: NotificationHandler) -> bool: return handler.group != group
+	)
+	
+	for handler in _shown_handlers:
+		if handler.group == group:
+			_process_early_disappearance(handler)
 
 
 func _process_appearance(handler: NotificationHandler) -> void:
@@ -264,6 +284,9 @@ func _process_disappearance(handler: NotificationHandler) -> void:
 	
 	if handler.notif.has_signal(&"marked_as_read"):
 		handler.notif.marked_as_read.disconnect(_process_early_disappearance)
+	
+	if handler.group and handler.notif.has_signal(&"group_marked_as_read"):
+		handler.notif.group_marked_as_read.disconnect(_mark_group_as_read)
 	
 	await _hide_handler(handler)
 	

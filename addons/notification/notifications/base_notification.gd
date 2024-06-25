@@ -5,6 +5,7 @@ extends PanelContainer
 
 
 signal marked_as_read
+signal group_marked_as_read
 
 
 #enum IconPosition {
@@ -132,4 +133,9 @@ func _adapt_to_icon_texture() -> void:
 
 
 func _on_close_pressed() -> void:
+	marked_as_read.emit()
+
+
+func _on_close_group_pressed() -> void:
+	group_marked_as_read.emit()
 	marked_as_read.emit()

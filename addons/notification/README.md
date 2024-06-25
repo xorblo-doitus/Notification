@@ -25,6 +25,10 @@ a custom control using BaseNotification as class. (But notifications under
 If the pushed notification has a `marked_as_read` signal,
 the notification will be closed early when this signal is emitted.
 
+If the pushed notification has a `group_marked_as_read` signal,
+all notifications of the same group will be closed early
+when this signal is emitted.
+
 
 ## Theme type variations
 
