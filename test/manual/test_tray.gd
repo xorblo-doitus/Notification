@@ -45,3 +45,10 @@ func _on_add_group_pressed() -> void:
 		notif,
 		NotificationTray.OnGlobalPushFail.WAIT_FOR_SHARED
 	).set_group(_group).set_audio_stream_player(alternative_audio_stream_player)
+
+
+func _on_toggle_group_ignore_pressed() -> void:
+	if NotificationTray.shared.is_group_ignored(_group):
+		NotificationTray.shared.unignore_group(_group)
+	else:
+		NotificationTray.shared.ignore_group(_group)

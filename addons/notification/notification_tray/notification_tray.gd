@@ -139,6 +139,8 @@ var custom_appear_animation: Callable
 ##     notif.hide()
 ## [/codeblock]
 var custom_disappear_animation: Callable
+## Notification whose group is in this array is automatically marked as read.
+var ignored_groups: Array[Group] = []
 
 
 enum OnGlobalPushFail {
@@ -187,6 +189,23 @@ func _ready() -> void:
 		NotificationTray.shared = self
 
 
+## Ignored groups will automatically be marked as read.
+func ignore_group(group: Group) -> void:
+	if group not in ignored_groups:
+		ignored_groups.push_back(group)
+		_mark_group_as_read(group)
+
+
+## Ignored groups will automatically be marked as read.
+func unignore_group(group: Group) -> void:
+	ignored_groups.erase(group)
+
+
+## Ignored groups will automatically be marked as read.
+func is_group_ignored(group: Group) -> bool:
+	return group in ignored_groups
+
+
 var _queued_handlers: Array[NotificationHandler] = []
 var _shown_handlers: Array[NotificationHandler] = []
 var _group_cache: Dictionary = {}
@@ -208,9 +227,14 @@ func reuse_handler(handler: NotificationHandler) -> void:
 
 ## Always call deferred please.
 func _process_handler(handler: NotificationHandler) -> void:
-	if handler.group != null and _group_cache.get(handler.group, 0) >= handler.group.max_amount:
-		notification_ignored.emit(handler)
-		return
+	if handler.group != null:
+		if handler.group in ignored_groups:
+			handler.clean_up()
+			return
+		
+		if _group_cache.get(handler.group, 0) >= handler.group.max_amount:
+			notification_ignored.emit(handler)
+			return
 	
 	if _shown_handlers.size() >= maximum_shown_notifications:
 		notification_pushed.emit(handler)
