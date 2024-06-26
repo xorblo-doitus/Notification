@@ -55,6 +55,5 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[connection signal="theme_changed" from="." to="." method="_on_theme_changed"]
 [connection signal="pressed" from="MainContainer/VBoxContainer/TitleContainer/close" to="." method="_on_close_pressed"]
 [connection signal="pressed" from="MainContainer/VBoxContainer/TitleContainer/close_group" to="." method="_on_close_group_pressed"]
