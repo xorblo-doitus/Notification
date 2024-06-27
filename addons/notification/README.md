@@ -29,6 +29,9 @@ If the pushed notification has a `group_marked_as_read` signal,
 all notifications of the same group will be closed early
 when this signal is emitted.
 
+If the pushed notification has a `group_ignored` signal,
+`ignore_group` will be called when this signal is emitted.
+
 
 ## Theme type variations
 

@@ -10,6 +10,10 @@ extends VBoxContainer
 ## [b]Note:[/b] If the pushed notification has a [code]group_marked_as_read[/code]
 ## signal, all notifications of the same group will be closed early
 ## when this signal is emitted.
+##
+## [b]Note:[/b] If the pushed notification has a [code]group_ignored[/code]
+## signal, [method ignore_group] will be called
+## when this signal is emitted.
 
 
 ## Emitted when a notification was ignored, for example because a notification
@@ -252,6 +256,10 @@ func _process_handler(handler: NotificationHandler) -> void:
 			_mark_group_as_read.bind(handler.group)
 		)
 		
+	if handler.group and handler.notif.has_signal(&"group_ignored"):
+		handler.notif.group_ignored.connect(
+			ignore_group.bind(handler.group)
+		)
 	
 	await _process_appearance(handler)
 	
@@ -311,6 +319,9 @@ func _process_disappearance(handler: NotificationHandler) -> void:
 	
 	if handler.group and handler.notif.has_signal(&"group_marked_as_read"):
 		handler.notif.group_marked_as_read.disconnect(_mark_group_as_read)
+	
+	if handler.group and handler.notif.has_signal(&"group_ignored"):
+		handler.notif.group_ignored.disconnect(ignore_group)
 	
 	await _hide_handler(handler)
 	
