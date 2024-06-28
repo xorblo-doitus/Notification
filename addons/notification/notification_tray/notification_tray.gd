@@ -18,7 +18,7 @@ extends VBoxContainer
 
 ## Emitted when a notification was ignored, for example because a notification
 ## of the same group was already shown.
-signal notification_ignored(handler: NotificationHandler)
+signal notification_droped(handler: NotificationHandler)
 ## Emitted when a notif is [i]pushed[/i]. It does not always mean that it appeared.
 signal notification_pushed(handler: NotificationHandler)
 signal notification_appearing(handler: NotificationHandler)
@@ -245,7 +245,7 @@ func _process_handler(handler: NotificationHandler) -> void:
 					# TODO historic stuf
 					pass
 				Group.OverflowBehavior.DROP:
-					notification_ignored.emit(handler)
+					notification_droped.emit(handler)
 			return
 	
 	if _shown_handlers.size() >= maximum_shown_notifications:
