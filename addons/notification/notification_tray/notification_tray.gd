@@ -233,11 +233,19 @@ func reuse_handler(handler: NotificationHandler) -> void:
 func _process_handler(handler: NotificationHandler) -> void:
 	if handler.group != null:
 		if handler.group in ignored_groups:
+			# TODO historic stuf
 			handler.clean_up()
 			return
 		
 		if _group_cache.get(handler.group, 0) >= handler.group.max_amount:
-			notification_ignored.emit(handler)
+			match handler.group.overflow_bahavior:
+				Group.OverflowBehavior.HOLD:
+					_queued_handlers.append(handler)
+				Group.OverflowBehavior.MARK_AS_READ:
+					# TODO historic stuf
+					pass
+				Group.OverflowBehavior.DROP:
+					notification_ignored.emit(handler)
 			return
 	
 	if _shown_handlers.size() >= maximum_shown_notifications:
@@ -525,9 +533,24 @@ class Group extends RefCounted:
 	func set_name(new_name: String) -> Group:
 		name = new_name
 		return self
+	
+	## When this amount of notification of the same group are reached in a
+	## notification tray, a reaction occurs accroding to [member overflow_bahavior]
 	var max_amount: int = 1
 	func set_max_amount(new_max_amount: int) -> Group:
 		max_amount = new_max_amount
+		return self
+	
+	enum OverflowBehavior {
+		## Notification will wait until another from the same group disappear.
+		HOLD,
+		MARK_AS_READ,
+		## Will act as if the notification was not send.
+		DROP,
+	}
+	var overflow_bahavior: OverflowBehavior = OverflowBehavior.HOLD
+	func set_overflow_bahavior(new_overflow_bahavior: OverflowBehavior) -> Group:
+		overflow_bahavior = new_overflow_bahavior
 		return self
 
 
